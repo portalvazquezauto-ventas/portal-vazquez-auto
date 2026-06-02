@@ -109,7 +109,37 @@ def _render_admin_dashboard(profile: dict):
     except Exception:
         pass
 
+    # Progreso propio del director
+    try:
+        uid = profile["id"]
+        my_reads = client.table("manual_reads").select("quiz_score").eq("user_id", uid).eq("is_completed", True).execute().data or []
+        my_sessions = client.table("training_sessions").select("score_global").eq("user_id", uid).eq("is_completed", True).execute().data or []
+        total_sections = client.table("manual_sections").select("id", count="exact").execute().count or 1
+        if my_reads or my_sessions:
+            st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+            st.markdown("""<div style="color:#6B7280;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">TU ACTIVIDAD</div>""", unsafe_allow_html=True)
+            scores_r = [r["quiz_score"] for r in my_reads if r.get("quiz_score") is not None]
+            scores_t = [s["score_global"] for s in my_sessions if s.get("score_global") is not None]
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                _stat_card("Manual", f"{len(my_reads)}/{total_sections}", "📖", "#CC1414")
+            with c2:
+                _stat_card("Promedio quiz", f"{int(sum(scores_r)/len(scores_r)) if scores_r else 0}%", "✏️", "#D97706")
+            with c3:
+                _stat_card("Score entrenamiento", f"{int(sum(scores_t)/len(scores_t)) if scores_t else 0}/100", "🤖", "#16A34A")
+    except Exception:
+        pass
+
     st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
-    if st.button("⚙️  Ir al Panel de Administración →", type="primary"):
-        st.session_state["page"] = "admin"
-        st.rerun()
+    st.markdown("""<div style="color:#6B7280;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">ACCESOS RÁPIDOS</div>""", unsafe_allow_html=True)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        _quick_btn("manual", "📖", "Manual de Ventas", "Leé y completá los quizzes")
+    with col2:
+        _quick_btn("guide", "🗂️", "Guía de Preguntas", "Consultá por perfil de cliente")
+    with col3:
+        _quick_btn("trainer", "🤖", "Entrenador Virtual", "Practicá con clientes simulados por IA")
+    with col4:
+        _quick_btn("admin", "⚙️", "Panel de Admin", "Gestión del equipo y contenido")
+
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
