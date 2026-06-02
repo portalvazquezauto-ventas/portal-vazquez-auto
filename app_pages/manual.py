@@ -95,37 +95,45 @@ def _render_progress_visual(sections, reads_by_section):
     if scores:
         avg_score = int(sum(scores) / len(scores))
 
-    st.markdown(f"""
-    <div style="background:white;border:1px solid #E5E7EB;border-radius:16px;padding:20px 24px;margin-bottom:28px;
-                box-shadow:0 1px 3px rgba(0,0,0,0.05)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div>
-          <span style="font-weight:700;color:#111;font-size:1rem">Tu progreso</span>
-          <span style="color:#6B7280;font-size:0.85rem;margin-left:8px">{completed} de {total} secciones completadas</span>
-        </div>
-        <div style="display:flex;gap:16px">
-          <div style="text-align:center">
-            <div style="font-size:1.4rem;font-weight:800;color:#CC1414">{pct}%</div>
-            <div style="font-size:0.7rem;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em">Avance</div>
-          </div>
-          {"<div style='text-align:center'><div style='font-size:1.4rem;font-weight:800;color:#16A34A'>" + str(avg_score) + "%</div><div style='font-size:0.7rem;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em'>Prom. Quiz</div></div>" if scores else ""}
-        </div>
-      </div>
-      <div style="background:#F3F4F6;border-radius:999px;height:10px;overflow:hidden">
-        <div style="background:linear-gradient(90deg,#CC1414,#E53E3E);height:100%;width:{pct}%;
-                    border-radius:999px;transition:width 0.5s ease"></div>
-      </div>
-      <div style="display:flex;gap:4px;margin-top:10px">
-        {"".join([
-            '<div title="{}" style="flex:1;height:4px;border-radius:2px;background:{}"></div>'.format(
-                s["title"],
-                "#16A34A" if reads_by_section.get(s["id"], {}).get("is_completed") else "#E5E7EB"
-            )
-            for s in sections
-        ])}
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+    avg_block = (
+        '<div style="text-align:center">'
+        '<div style="font-size:1.4rem;font-weight:800;color:#16A34A">' + str(avg_score) + '%</div>'
+        '<div style="font-size:0.7rem;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em">Prom. Quiz</div>'
+        '</div>'
+    ) if scores else ""
+
+    st.markdown(
+        '<div style="background:white;border:1px solid #E5E7EB;border-radius:16px;padding:20px 24px;margin-bottom:28px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">'
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+        '<div>'
+        '<span style="font-weight:700;color:#111;font-size:1rem">Tu progreso</span>'
+        '<span style="color:#6B7280;font-size:0.85rem;margin-left:8px">' + str(completed) + ' de ' + str(total) + ' secciones completadas</span>'
+        '</div>'
+        '<div style="display:flex;gap:16px">'
+        '<div style="text-align:center">'
+        '<div style="font-size:1.4rem;font-weight:800;color:#CC1414">' + str(pct) + '%</div>'
+        '<div style="font-size:0.7rem;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em">Avance</div>'
+        '</div>'
+        + avg_block +
+        '</div>'
+        '</div>', unsafe_allow_html=True)
+
+    segments = "".join([
+        '<div title="{}" style="flex:1;height:4px;border-radius:2px;background:{}"></div>'.format(
+            s["title"],
+            "#16A34A" if reads_by_section.get(s["id"], {}).get("is_completed") else "#E5E7EB"
+        )
+        for s in sections
+    ])
+    st.markdown(
+        '<div style="background:white;border:1px solid #E5E7EB;border-radius:16px;padding:16px 24px 20px;margin-bottom:28px;box-shadow:0 1px 3px rgba(0,0,0,0.05)">'
+        '<div style="background:#F3F4F6;border-radius:999px;height:10px;overflow:hidden">'
+        '<div style="background:linear-gradient(90deg,#CC1414,#E53E3E);height:100%;width:' + str(pct) + '%;border-radius:999px"></div>'
+        '</div>'
+        '<div style="display:flex;gap:4px;margin-top:10px">' + segments + '</div>'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
 # ── Grid de secciones ───────────────────────────────────────────
