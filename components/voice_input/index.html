@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<script src="https://unpkg.com/streamlit-component-lib@2.0.0/dist/index.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  body { background: transparent; padding: 0; }
+
+  .wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: white;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 8px 10px;
+    transition: border-color 0.15s;
+  }
+  .input-row:focus-within { border-color: #CC1414; box-shadow: 0 0 0 3px rgba(204,20,20,0.08); }
+
+  textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 0.92rem;
+    color: #111;
+    line-height: 1.5;
+    min-height: 40px;
+    max-height: 120px;
+    font-family: inherit;
+    background: transparent;
+    overflow-y: auto;
+  }
+  textarea::placeholder { color: #9CA3AF; }
+
+  .mic-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #F3F4F6;
+    color: #374151;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+  }
+  .mic-btn:hover { background: #E5E7EB; }
+  .mic-btn.recording {
+    background: #DC2626;
+    color: white;
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(220,38,38,0); }
+  }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-send {
+    flex: 1;
+    padding: 9px 0;
+    background: #CC1414;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-send:hover { background: #A50E0E; }
+  .btn-send:disabled { background: #D1D5DB; cursor: not-allowed; }
+
+  .btn-hint {
+    padding: 9px 14px;
+    background: white;
+    color: #374151;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-hint:hover { border-color: #CC1414; color: #CC1414; }
+
+  .btn-end {
+    padding: 9px 14px;
+    background: white;
+    color: #6B7280;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-end:hover { border-color: #374151; color: #111; }
+
+  .status {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+    height: 16px;
+    padding-left: 2px;
+  }
+  .status.recording { color: #DC2626; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="input-row">
+    <textarea id="msg" placeholder="Escribí tu respuesta..." rows="1"
+              oninput="autoResize(this); updateSend()"
+              onkeydown="handleKey(event)"></textarea>
+    <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Hablar">🎙️</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="actions" id="actions">
+    <button class="btn-send" id="sendBtn" onclick="doSend()" disabled>Enviar →</button>
+    <button class="btn-hint" id="hintBtn" onclick="doHint()" style="display:none">💡 Sugerencia</button>
+    <button class="btn-end" onclick="doEnd()">🏁 Finalizar</button>
+  </div>
+</div>
+
+<script>
+  let isRecording = false;
+  let recognition = null;
+  const textarea = document.getElementById('msg');
+  const sendBtn = document.getElementById('sendBtn');
+  const micBtn = document.getElementById('micBtn');
+  const status = document.getElementById('status');
+
+  // Recibir config de Streamlit (mode: training/evaluation)
+  Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, (e) => {
+    const args = e.detail.args;
+    const mode = args.mode || 'evaluation';
+    const hintBtn = document.getElementById('hintBtn');
+    hintBtn.style.display = mode === 'training' ? 'inline-block' : 'none';
+    Streamlit.setFrameHeight();
+  });
+
+  Streamlit.setComponentReady();
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    Streamlit.setFrameHeight();
+  }
+
+  function updateSend() {
+    sendBtn.disabled = textarea.value.trim().length === 0;
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (!sendBtn.disabled) doSend();
+    }
+  }
+
+  function doSend() {
+    const text = textarea.value.trim();
+    if (!text) return;
+    Streamlit.setComponentValue({ action: 'send', text });
+    textarea.value = '';
+    textarea.style.height = 'auto';
+    sendBtn.disabled = true;
+    status.textContent = '';
+    Streamlit.setFrameHeight();
+  }
+
+  function doHint() {
+    Streamlit.setComponentValue({ action: 'hint', text: '' });
+  }
+
+  function doEnd() {
+    Streamlit.setComponentValue({ action: 'end', text: '' });
+  }
+
+  function toggleMic() {
+    if (isRecording) stopMic();
+    else startMic();
+  }
+
+  function startMic() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      status.textContent = 'Tu navegador no soporta voz (usá Chrome)';
+      return;
+    }
+    recognition = new SR();
+    recognition.lang = 'es-AR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => {
+      isRecording = true;
+      micBtn.classList.add('recording');
+      micBtn.textContent = '⏹️';
+      status.textContent = 'Grabando... hablá ahora';
+      status.className = 'status recording';
+    };
+
+    recognition.onresult = (e) => {
+      let t = '';
+      for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+      textarea.value = t;
+      autoResize(textarea);
+      updateSend();
+    };
+
+    recognition.onend = () => {
+      isRecording = false;
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎙️';
+      status.textContent = textarea.value.trim() ? 'Listo — revisá y enviá' : '';
+      status.className = 'status';
+    };
+
+    recognition.onerror = (e) => {
+      isRecording = false;
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎙️';
+      status.textContent = 'Error de micrófono: ' + e.error;
+      status.className = 'status';
+    };
+
+    recognition.start();
+  }
+
+  function stopMic() {
+    if (recognition) recognition.stop();
+  }
+</script>
+</body>
+</html>
