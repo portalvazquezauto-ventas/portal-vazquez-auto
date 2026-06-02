@@ -7,8 +7,8 @@ def render_quiz(questions: list[dict], section_id: int) -> tuple[dict, int] | No
     Retorna (quiz_answers, score_pct) si se completó, None si aún no.
     """
     if not questions:
-        st.info("Esta sección no tiene quiz asignado.")
-        return {}, 100
+        st.info("Esta sección no tiene quiz asignado aún. Un encargado puede regenerar el contenido desde el Manual.")
+        return None
 
     quiz_key = f"quiz_state_{section_id}"
     submitted_key = f"quiz_submitted_{section_id}"

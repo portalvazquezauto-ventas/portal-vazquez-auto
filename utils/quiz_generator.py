@@ -43,8 +43,8 @@ El campo "correct" es el índice (0-3) de la opción correcta."""
 
     try:
         message = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1024,
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
         raw = message.content[0].text.strip()

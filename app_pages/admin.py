@@ -70,6 +70,30 @@ def _render_notifications(profile):
 def _render_manual_activity(role):
     st.markdown("### Actividad del manual por vendedor")
     client = get_client()
+    admin_client = get_admin_client()
+
+    # ── Reset de historial ──────────────────────────────────────
+    with st.expander("🔄 Reiniciar historial de un vendedor"):
+        try:
+            profiles = admin_client.table("profiles").select("id,full_name").eq("role", "seller").order("full_name").execute().data or []
+            if profiles:
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    selected = st.selectbox("Vendedor", profiles, format_func=lambda x: x["full_name"], key="reset_seller")
+                with col2:
+                    reset_type = st.selectbox("Qué reiniciar", ["Manual", "Entrenamientos", "Todo"], key="reset_type")
+                if st.button("Reiniciar historial", type="primary", key="btn_reset"):
+                    if reset_type in ("Manual", "Todo"):
+                        admin_client.table("manual_reads").delete().eq("user_id", selected["id"]).execute()
+                    if reset_type in ("Entrenamientos", "Todo"):
+                        admin_client.table("training_sessions").delete().eq("user_id", selected["id"]).execute()
+                    st.success(f"✅ Historial de {selected['full_name']} reiniciado ({reset_type}).")
+                    st.rerun()
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+    st.markdown("---")
+
     try:
         reads = client.table("manual_reads").select("*, profiles(full_name), manual_sections(title, section_number)").eq("is_completed", True).order("completed_at", desc=True).execute().data or []
         if not reads:
