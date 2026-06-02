@@ -171,6 +171,28 @@ st.markdown("""
   .stDeployButton { display: none !important; }
   button[kind="header"] { display: none !important; }
 
+  /* ── Botón de reabrir sidebar — siempre visible ── */
+  [data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    z-index: 9999 !important;
+    background: #CC1414 !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+  }
+  [data-testid="stSidebarCollapsedControl"] svg {
+    fill: white !important;
+    color: white !important;
+  }
+  [data-testid="stSidebarCollapsedControl"] button {
+    color: white !important;
+  }
+
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
