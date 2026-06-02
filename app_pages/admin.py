@@ -255,7 +255,7 @@ def _render_user_management(profile, role):
                 )
 
                 if u["id"] != profile["id"]:
-                    c1, c2, c3 = st.columns([1, 1, 2])
+                    c1, c2, c3, c4 = st.columns([1, 1, 1, 1])
                     with c1:
                         label = "🔒 Bloquear" if is_active else "✅ Activar"
                         if st.button(label, key=f"toggle_{u['id']}", use_container_width=True):
@@ -264,8 +264,64 @@ def _render_user_management(profile, role):
                     with c2:
                         if st.button("🔑 Nueva clave", key=f"pwdbtn_{u['id']}", use_container_width=True):
                             st.session_state[f"show_pwd_{u['id']}"] = not st.session_state.get(f"show_pwd_{u['id']}", False)
+                            st.session_state.pop(f"show_edit_{u['id']}", None)
+                            st.rerun()
+                    with c3:
+                        if st.button("✏️ Editar", key=f"editbtn_{u['id']}", use_container_width=True):
+                            st.session_state[f"show_edit_{u['id']}"] = not st.session_state.get(f"show_edit_{u['id']}", False)
+                            st.session_state.pop(f"show_pwd_{u['id']}", None)
+                            st.rerun()
+                    with c4:
+                        if st.button("🗑️ Eliminar", key=f"delbtn_{u['id']}", use_container_width=True):
+                            st.session_state[f"confirm_del_{u['id']}"] = True
                             st.rerun()
 
+                    # Confirmar eliminación
+                    if st.session_state.get(f"confirm_del_{u['id']}"):
+                        st.warning(f"⚠️ ¿Eliminar a **{u['full_name']}**? Esta acción no se puede deshacer.")
+                        ca, cb = st.columns(2)
+                        with ca:
+                            if st.button("Sí, eliminar", key=f"confirmdel_{u['id']}", type="primary", use_container_width=True):
+                                try:
+                                    admin_client = get_admin_client()
+                                    admin_client.table("profiles").delete().eq("id", u["id"]).execute()
+                                    admin_client.auth.admin.delete_user(u["id"])
+                                    st.session_state.pop(f"confirm_del_{u['id']}", None)
+                                    st.success(f"✅ Usuario {u['full_name']} eliminado.")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error al eliminar: {e}")
+                        with cb:
+                            if st.button("Cancelar", key=f"canceldel_{u['id']}", use_container_width=True):
+                                st.session_state.pop(f"confirm_del_{u['id']}", None)
+                                st.rerun()
+
+                    # Form de edición
+                    if st.session_state.get(f"show_edit_{u['id']}"):
+                        with st.form(f"edit_form_{u['id']}"):
+                            new_name = st.text_input("Nombre completo", value=u["full_name"], key=f"ename_{u['id']}")
+                            new_email = st.text_input("Email", value=u["email"], key=f"eemail_{u['id']}")
+                            if role == "director":
+                                new_role = st.selectbox("Rol", ["seller", "manager", "director"],
+                                    index=["seller", "manager", "director"].index(u["role"]),
+                                    format_func=lambda x: {"seller": "Vendedor", "manager": "Encargado", "director": "Director"}[x],
+                                    key=f"erole_{u['id']}")
+                            else:
+                                new_role = u["role"]
+                            if st.form_submit_button("💾 Guardar cambios", type="primary"):
+                                try:
+                                    get_admin_client().table("profiles").update({
+                                        "full_name": new_name,
+                                        "email": new_email,
+                                        "role": new_role,
+                                    }).eq("id", u["id"]).execute()
+                                    st.success(f"✅ Usuario actualizado.")
+                                    st.session_state.pop(f"show_edit_{u['id']}", None)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error: {e}")
+
+                    # Form de contraseña
                     if st.session_state.get(f"show_pwd_{u['id']}"):
                         with st.form(f"pwd_form_{u['id']}"):
                             new_pwd = st.text_input("Nueva contraseña", type="password", placeholder="Mínimo 8 caracteres", key=f"pwd_{u['id']}")
