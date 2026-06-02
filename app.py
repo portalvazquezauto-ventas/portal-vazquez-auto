@@ -295,16 +295,13 @@ def _logo_html(size: str = "normal") -> str:
     if size == "small":
         return """
         <div style="display:flex;align-items:center;gap:10px;padding:18px 0 14px">
-          <div style="position:relative;width:36px;height:36px;flex-shrink:0">
-            <div style="background:#CC1414;width:36px;height:36px;border-radius:8px;
-                        display:flex;align-items:center;justify-content:center">
-              <span style="color:white;font-weight:900;font-size:1.1rem;letter-spacing:-0.02em">V</span>
-            </div>
+          <div style="background:#CC1414;border-radius:8px;padding:5px 10px;display:inline-flex;
+                      flex-direction:column;align-items:flex-start;line-height:1;
+                      box-shadow:0 2px 8px rgba(204,20,20,0.3)">
+            <span style="color:white;font-weight:900;font-size:0.92rem;letter-spacing:0.04em">VÁZQUEZ</span>
+            <span style="color:rgba(255,255,255,0.75);font-weight:600;font-size:0.52rem;letter-spacing:0.25em">AUTO</span>
           </div>
           <div>
-            <div style="color:#FFFFFF;font-weight:800;font-size:0.95rem;letter-spacing:0.04em;line-height:1.1">
-              VÁZQUEZ <span style="color:#CC1414">AUTO</span>
-            </div>
             <div style="color:#6B7280;font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px">
               Portal Comercial
             </div>
@@ -312,21 +309,14 @@ def _logo_html(size: str = "normal") -> str:
         </div>"""
     return """
     <div style="text-align:center;padding:40px 0 28px">
-      <div style="display:inline-flex;flex-direction:column;align-items:center;gap:10px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="background:#CC1414;width:52px;height:52px;border-radius:12px;
-                      display:flex;align-items:center;justify-content:center;
-                      box-shadow:0 4px 14px rgba(204,20,20,0.35)">
-            <span style="color:white;font-weight:900;font-size:1.8rem;letter-spacing:-0.02em">V</span>
-          </div>
-          <div style="text-align:left">
-            <div style="font-size:1.6rem;font-weight:900;color:#111;letter-spacing:-0.02em;line-height:1">
-              VÁZQUEZ
-            </div>
-            <div style="font-size:1rem;font-weight:700;color:#CC1414;letter-spacing:0.18em;line-height:1">
-              AUTO
-            </div>
-          </div>
+      <div style="display:inline-flex;flex-direction:column;align-items:center;gap:12px">
+        <div style="background:#CC1414;border-radius:14px;padding:14px 28px;
+                    box-shadow:0 6px 24px rgba(204,20,20,0.4);display:inline-flex;
+                    flex-direction:column;align-items:center;line-height:1;gap:4px">
+          <span style="color:white;font-weight:900;font-size:2rem;letter-spacing:0.06em;
+                       text-shadow:0 1px 3px rgba(0,0,0,0.2)">VÁZQUEZ</span>
+          <span style="color:rgba(255,255,255,0.8);font-weight:700;font-size:0.85rem;
+                       letter-spacing:0.35em">AUTO</span>
         </div>
         <div style="background:#F3F4F6;border-radius:20px;padding:4px 14px">
           <span style="color:#6B7280;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">
@@ -352,9 +342,20 @@ def render_login():
         _render_forgot_password()
         return
 
+    # Input oculto para evitar tooltip "Press Enter to submit form" en el campo contraseña
+    st.markdown("""
+    <style>
+    div[data-testid="stForm"] input[aria-label="__noop__"] {
+      display:none !important; height:0 !important; padding:0 !important; border:none !important;
+    }
+    div[data-testid="stForm"] label:has(+ div input[aria-label="__noop__"]) { display:none !important; }
+    </style>""", unsafe_allow_html=True)
+
     with st.form("login_form"):
         email = st.text_input("Email", placeholder="tu@vazquezauto.com.ar")
         password = st.text_input("Contraseña", type="password", placeholder="••••••••")
+        # Campo trampa: evita que el browser muestre "Press Enter to submit form" en el campo contraseña
+        st.text_input("__noop__", label_visibility="collapsed", key="_noop_login")
         submit = st.form_submit_button("Ingresar →", use_container_width=True, type="primary")
 
         if submit:
