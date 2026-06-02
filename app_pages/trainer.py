@@ -13,9 +13,6 @@ from utils.notifications import notify_training_completed
 from components.scoring import render_score_cards, render_progress_bar
 import streamlit.components.v1 as components
 
-_COMPONENT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "components", "voice_input")
-_voice_input = components.declare_component("voice_input", path=_COMPONENT_PATH)
-
 
 def render():
     profile = get_profile()
@@ -83,25 +80,29 @@ def _render_chat(session: dict, profile: dict):
 
     st.markdown("---")
 
-    result = _voice_input(mode=mode, key=f"voice_{session['turn']}")
+    # Input de texto
+    user_input = st.chat_input("Escribí tu respuesta al cliente...", key=f"chat_{session['turn']}")
 
-    if result:
-        action = result.get("action")
-        text = result.get("text", "").strip()
+    # Botones de acción
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if mode == "training":
+            if st.button("💡 Ver respuesta sugerida", use_container_width=True, key=f"hint_{session['turn']}"):
+                last_client_msg = _get_last_client_message(session["messages"])
+                suggestion = get_suggested_answer(last_client_msg, session["profile_type"])
+                st.info(f"**Respuesta sugerida del manual:** {suggestion}")
+                session["used_hints"] = True
+    with col2:
+        if st.button("🏁 Finalizar sesión", use_container_width=True, key=f"end_{session['turn']}"):
+            if len(session["messages"]) > 1:
+                _finalize_session(session, profile)
+                st.rerun()
+            else:
+                st.warning("Enviá al menos una respuesta antes de finalizar.")
 
-        if action == "send" and text:
-            _process_seller_turn(text, session, profile)
-            st.rerun()
-
-        elif action == "hint" and mode == "training":
-            last_client_msg = _get_last_client_message(session["messages"])
-            suggestion = get_suggested_answer(last_client_msg, session["profile_type"])
-            st.info(f"**Respuesta sugerida:** {suggestion}")
-            session["used_hints"] = True
-
-        elif action == "end" and len(session["messages"]) > 1:
-            _finalize_session(session, profile)
-            st.rerun()
+    if user_input and user_input.strip():
+        _process_seller_turn(user_input.strip(), session, profile)
+        st.rerun()
 
 
 def _render_messages(messages: list):
