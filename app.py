@@ -2,6 +2,16 @@ import streamlit as st
 from dotenv import load_dotenv
 import base64, os
 
+
+def _get_logo_base64() -> str:
+    """Carga el logo como base64 para embeber en HTML."""
+    logo_path = os.path.join(os.path.dirname(__file__), "assets", "Logo Vazquez Auto.png")
+    try:
+        with open(logo_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return ""
+
 load_dotenv()
 
 st.set_page_config(
@@ -314,39 +324,35 @@ st.markdown("""
 
 
 def _logo_html(size: str = "normal") -> str:
+    b64 = _get_logo_base64()
+    img_tag = f'<img src="data:image/png;base64,{b64}" alt="Vázquez Auto"' if b64 else '<span style="color:#CC1414;font-weight:900">VÁZQUEZ AUTO</span'
     if size == "small":
-        return """
-        <div style="display:flex;align-items:center;gap:10px;padding:18px 0 14px">
-          <div style="background:#CC1414;border-radius:8px;padding:5px 10px;display:inline-flex;
-                      flex-direction:column;align-items:flex-start;line-height:1;
-                      box-shadow:0 2px 8px rgba(204,20,20,0.3)">
-            <span style="color:white;font-weight:900;font-size:0.92rem;letter-spacing:0.04em">VÁZQUEZ</span>
-            <span style="color:rgba(255,255,255,0.75);font-weight:600;font-size:0.52rem;letter-spacing:0.25em">AUTO</span>
-          </div>
-          <div>
-            <div style="color:#6B7280;font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px">
-              Portal Comercial
-            </div>
-          </div>
-        </div>"""
-    return """
-    <div style="text-align:center;padding:40px 0 28px">
-      <div style="display:inline-flex;flex-direction:column;align-items:center;gap:12px">
-        <div style="background:#CC1414;border-radius:14px;padding:14px 28px;
-                    box-shadow:0 6px 24px rgba(204,20,20,0.4);display:inline-flex;
-                    flex-direction:column;align-items:center;line-height:1;gap:4px">
-          <span style="color:white;font-weight:900;font-size:2rem;letter-spacing:0.06em;
-                       text-shadow:0 1px 3px rgba(0,0,0,0.2)">VÁZQUEZ</span>
-          <span style="color:rgba(255,255,255,0.8);font-weight:700;font-size:0.85rem;
-                       letter-spacing:0.35em">AUTO</span>
-        </div>
-        <div style="background:#F3F4F6;border-radius:20px;padding:4px 14px">
-          <span style="color:#6B7280;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">
-            Portal Comercial Interno
-          </span>
-        </div>
-      </div>
-    </div>"""
+        if b64:
+            return (
+                '<div style="padding:16px 0 12px">'
+                '<img src="data:image/png;base64,' + b64 + '" alt="Vázquez Auto" '
+                'style="height:38px;width:auto;display:block">'
+                '</div>'
+            )
+        return '<div style="padding:16px 0 12px;color:white;font-weight:900;font-size:1rem">VÁZQUEZ AUTO</div>'
+
+    if b64:
+        return (
+            '<div style="text-align:center;padding:40px 0 24px">'
+            '<div style="display:inline-flex;flex-direction:column;align-items:center;gap:14px">'
+            '<img src="data:image/png;base64,' + b64 + '" alt="Vázquez Auto" '
+            'style="height:80px;width:auto;border-radius:10px;'
+            'box-shadow:0 4px 18px rgba(204,20,20,0.3)">'
+            '<div style="background:#F3F4F6;border-radius:20px;padding:4px 14px">'
+            '<span style="color:#6B7280;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">'
+            'Portal Comercial Interno'
+            '</span></div></div></div>'
+        )
+    return (
+        '<div style="text-align:center;padding:40px 0 28px">'
+        '<span style="font-size:2rem;font-weight:900;color:#CC1414">VÁZQUEZ AUTO</span>'
+        '</div>'
+    )
 
 
 def render_login():
