@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import os
 from datetime import datetime
 from auth import get_profile
 from supabase_client import get_client
@@ -12,7 +13,8 @@ from utils.notifications import notify_training_completed
 from components.scoring import render_score_cards, render_progress_bar
 import streamlit.components.v1 as components
 
-_voice_input = components.declare_component("voice_input", path="components/voice_input")
+_COMPONENT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "components", "voice_input")
+_voice_input = components.declare_component("voice_input", path=_COMPONENT_PATH)
 
 
 def render():

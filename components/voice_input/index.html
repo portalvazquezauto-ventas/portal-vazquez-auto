@@ -148,16 +148,17 @@
   const micBtn = document.getElementById('micBtn');
   const status = document.getElementById('status');
 
+  Streamlit.setComponentReady();
+  Streamlit.setFrameHeight(130);
+
   // Recibir config de Streamlit (mode: training/evaluation)
   Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, (e) => {
-    const args = e.detail.args;
+    const args = e.detail.args || {};
     const mode = args.mode || 'evaluation';
     const hintBtn = document.getElementById('hintBtn');
     hintBtn.style.display = mode === 'training' ? 'inline-block' : 'none';
-    Streamlit.setFrameHeight();
+    Streamlit.setFrameHeight(130);
   });
-
-  Streamlit.setComponentReady();
 
   function autoResize(el) {
     el.style.height = 'auto';
