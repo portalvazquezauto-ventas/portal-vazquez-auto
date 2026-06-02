@@ -17,8 +17,16 @@ import streamlit.components.v1 as components
 def render():
     profile = get_profile()
 
-    st.markdown("## 🤖 Entrenador Virtual de Ventas")
-    st.markdown("Practicá una situación de venta con un cliente simulado por IA.")
+    col_title, col_back = st.columns([6, 1])
+    with col_title:
+        st.markdown("## 🤖 Entrenador Virtual de Ventas")
+        st.markdown("Practicá una situación de venta con un cliente simulado por IA.")
+    with col_back:
+        st.markdown('<div style="padding-top:6px"></div>', unsafe_allow_html=True)
+        if st.button("🏠 Inicio", key="trainer_back_home", use_container_width=True):
+            st.session_state["page"] = "dashboard"
+            st.session_state.pop("trainer_session", None)
+            st.rerun()
     st.markdown("---")
 
     session_key = "trainer_session"

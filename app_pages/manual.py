@@ -28,19 +28,27 @@ def render():
     client = get_client()
 
     # Header de página
-    st.markdown("""
-    <div style="margin-bottom:32px">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <div style="background:#CC1414;color:white;width:40px;height:40px;border-radius:10px;
-                    display:flex;align-items:center;justify-content:center;font-size:1.3rem">📖</div>
-        <div>
-          <h2 style="margin:0;color:#111;font-weight:800">Manual de Ventas</h2>
-          <p style="margin:0;color:#6B7280;font-size:0.85rem">Vázquez Auto · 2026</p>
+    col_title, col_back = st.columns([6, 1])
+    with col_title:
+        st.markdown("""
+        <div style="margin-bottom:32px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="background:#CC1414;color:white;width:40px;height:40px;border-radius:10px;
+                        display:flex;align-items:center;justify-content:center;font-size:1.3rem">📖</div>
+            <div>
+              <h2 style="margin:0;color:#111;font-weight:800">Manual de Ventas</h2>
+              <p style="margin:0;color:#6B7280;font-size:0.85rem">Vázquez Auto · 2026</p>
+            </div>
+          </div>
+          <div style="height:3px;width:48px;background:#CC1414;border-radius:2px;margin-top:6px"></div>
         </div>
-      </div>
-      <div style="height:3px;width:48px;background:#CC1414;border-radius:2px;margin-top:6px"></div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    with col_back:
+        st.markdown('<div style="padding-top:6px"></div>', unsafe_allow_html=True)
+        if st.button("🏠 Inicio", key="manual_back_home", use_container_width=True):
+            st.session_state["page"] = "dashboard"
+            st.session_state.pop("selected_section", None)
+            st.rerun()
 
     if is_manager_or_above():
         _render_update_button(profile, client)

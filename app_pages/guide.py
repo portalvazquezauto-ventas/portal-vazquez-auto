@@ -29,8 +29,15 @@ CATEGORY_LABELS = {
 def render():
     client = get_client()
 
-    st.markdown("## 🗂️ Guía de Preguntas Estructurada")
-    st.markdown("Consultá antes de una visita o llamada. Hacé clic en una pregunta para ver la respuesta esperada.")
+    col_title, col_back = st.columns([6, 1])
+    with col_title:
+        st.markdown("## 🗂️ Guía de Preguntas Estructurada")
+        st.markdown("Consultá antes de una visita o llamada. Hacé clic en una pregunta para ver la respuesta esperada.")
+    with col_back:
+        st.markdown('<div style="padding-top:6px"></div>', unsafe_allow_html=True)
+        if st.button("🏠 Inicio", key="guide_back_home", use_container_width=True):
+            st.session_state["page"] = "dashboard"
+            st.rerun()
     st.markdown("---")
 
     data = _load_guide(client)
