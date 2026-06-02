@@ -33,14 +33,23 @@ def render():
     name = profile.get("full_name", "").split()[0]
     role = get_role()
 
-    st.markdown(f"""
-    <div style="background:white;border-radius:16px;padding:28px 32px;
-                border:1.5px solid #E5E7EB;margin-bottom:28px;
-                box-shadow:0 1px 6px rgba(0,0,0,0.05)">
-      <div style="font-size:0.78rem;color:#CC1414;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Portal Comercial</div>
-      <h1 style="margin:0;font-size:1.9rem;font-weight:900;color:#111">Hola, {name} 👋</h1>
-      <p style="color:#6B7280;margin:6px 0 0;font-size:0.92rem">Bienvenido al portal de ventas de Vázquez Auto</p>
-    </div>""", unsafe_allow_html=True)
+    col_welcome, col_logout = st.columns([6, 1])
+    with col_welcome:
+        st.markdown(f"""
+        <div style="background:white;border-radius:16px;padding:28px 32px;
+                    border:1.5px solid #E5E7EB;margin-bottom:28px;
+                    box-shadow:0 1px 6px rgba(0,0,0,0.05)">
+          <div style="font-size:0.78rem;color:#CC1414;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Portal Comercial</div>
+          <h1 style="margin:0;font-size:1.9rem;font-weight:900;color:#111">Hola, {name} 👋</h1>
+          <p style="color:#6B7280;margin:6px 0 0;font-size:0.92rem">Bienvenido al portal de ventas de Vázquez Auto</p>
+        </div>""", unsafe_allow_html=True)
+    with col_logout:
+        st.markdown('<div style="padding-top:18px"></div>', unsafe_allow_html=True)
+        if st.button("🚪 Salir", use_container_width=True, key="dashboard_logout"):
+            from auth import logout
+            logout()
+            st.session_state.clear()
+            st.rerun()
 
     if role == "seller":
         _render_seller_dashboard(profile)
