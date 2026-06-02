@@ -68,8 +68,19 @@ Respondé SOLO con un objeto JSON válido, sin texto extra, sin backticks:
 }"""
 
 
+def _get_api_key() -> str:
+    try:
+        import streamlit as st
+        key = st.secrets.get("ANTHROPIC_API_KEY")
+        if key:
+            return key
+    except Exception:
+        pass
+    return os.getenv("ANTHROPIC_API_KEY", "")
+
+
 def get_client():
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = _get_api_key()
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY no configurada")
     return anthropic.Anthropic(api_key=api_key)
