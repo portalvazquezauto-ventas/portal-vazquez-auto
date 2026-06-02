@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+  body { background: transparent; padding: 8px; }
+
+  .voice-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle-btn {
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border: 1px solid #3C3489;
+    border-radius: 20px;
+    background: white;
+    color: #3C3489;
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: #3C3489;
+    color: white;
+  }
+
+  .mic-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: #3C3489;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mic-btn.recording { background: #DC2626; animation: pulse 1s infinite; }
+  .mic-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(220,38,38,0); }
+  }
+
+  .status {
+    font-size: 0.75rem;
+    color: #6B7280;
+    min-height: 18px;
+  }
+
+  .transcript-box {
+    width: 100%;
+    min-height: 60px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 0.9rem;
+    resize: none;
+    font-family: sans-serif;
+  }
+
+  .send-btn {
+    padding: 8px 20px;
+    background: #3C3489;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .send-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+  .mic-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="voice-container">
+  <div class="toggle-row">
+    <button class="toggle-btn active" id="btnText" onclick="setMode('text')">✏️ Texto</button>
+    <button class="toggle-btn" id="btnVoice" onclick="setMode('voice')">🎙️ Voz</button>
+  </div>
+
+  <!-- Modo texto -->
+  <div id="textMode">
+    <textarea class="transcript-box" id="textInput" placeholder="Escribí tu respuesta acá..."></textarea>
+    <br>
+    <button class="send-btn" id="sendTextBtn" onclick="sendText()">Enviar →</button>
+  </div>
+
+  <!-- Modo voz -->
+  <div id="voiceMode" style="display:none">
+    <div class="mic-row">
+      <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Grabar">🎙️</button>
+      <div class="status" id="statusLabel">Presioná el micrófono para grabar</div>
+    </div>
+    <textarea class="transcript-box" id="voiceTranscript" placeholder="Tu respuesta aparecerá acá..."></textarea>
+    <br>
+    <button class="send-btn" id="sendVoiceBtn" onclick="sendVoice()" disabled>Enviar →</button>
+  </div>
+</div>
+
+<script>
+let mode = 'text';
+let recognition = null;
+let isRecording = false;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('textMode').style.display = m === 'text' ? 'block' : 'none';
+  document.getElementById('voiceMode').style.display = m === 'voice' ? 'block' : 'none';
+  document.getElementById('btnText').className = 'toggle-btn' + (m === 'text' ? ' active' : '');
+  document.getElementById('btnVoice').className = 'toggle-btn' + (m === 'voice' ? ' active' : '');
+}
+
+function sendText() {
+  const text = document.getElementById('textInput').value.trim();
+  if (!text) return;
+  window.parent.postMessage({ type: 'seller_message', text }, '*');
+  document.getElementById('textInput').value = '';
+}
+
+function sendVoice() {
+  const text = document.getElementById('voiceTranscript').value.trim();
+  if (!text) return;
+  window.parent.postMessage({ type: 'seller_message', text }, '*');
+  document.getElementById('voiceTranscript').value = '';
+  document.getElementById('sendVoiceBtn').disabled = true;
+}
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+    document.getElementById('statusLabel').textContent = 'Tu navegador no soporta reconocimiento de voz.';
+    return;
+  }
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'es-AR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('micBtn').className = 'mic-btn recording';
+    document.getElementById('micBtn').textContent = '⏹️';
+    document.getElementById('statusLabel').textContent = 'Grabando... hablá ahora';
+  };
+
+  recognition.onresult = (e) => {
+    let transcript = '';
+    for (let i = 0; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    document.getElementById('voiceTranscript').value = transcript;
+    document.getElementById('sendVoiceBtn').disabled = transcript.trim().length === 0;
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('micBtn').className = 'mic-btn';
+    document.getElementById('micBtn').textContent = '🎙️';
+    document.getElementById('statusLabel').textContent = 'Listo. Revisá el texto y enviá.';
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById('micBtn').className = 'mic-btn';
+    document.getElementById('micBtn').textContent = '🎙️';
+    document.getElementById('statusLabel').textContent = 'Error: ' + e.error;
+  };
+
+  recognition.start();
+}
+
+function stopRecording() {
+  if (recognition) recognition.stop();
+}
+
+// Text-to-speech: recibe mensaje del cliente desde Streamlit
+window.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'speak_client') {
+    const utt = new SpeechSynthesisUtterance(e.data.text);
+    utt.lang = 'es-AR';
+    utt.rate = 0.95;
+    speechSynthesis.speak(utt);
+  }
+});
+
+// Enter en textarea envía
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    if (mode === 'text' && document.activeElement.id === 'textInput') {
+      e.preventDefault();
+      sendText();
+    }
+  }
+});
+</script>
+</body>
+</html>
