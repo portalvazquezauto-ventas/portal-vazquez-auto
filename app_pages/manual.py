@@ -63,7 +63,7 @@ def render():
                 st.session_state.pop("selected_section", None)
                 st.session_state.pop(f"quiz_submitted_{selected_id}", None)
                 st.rerun()
-            _render_section_visual(selected, user_id, profile, reads_by_section, client)
+            _render_section_visual(selected, user_id, profile, reads_by_section, client, sections)
             return
 
     _render_section_grid(sections, reads_by_section)
@@ -183,7 +183,7 @@ def _render_section_grid(sections, reads_by_section):
 
 
 # ── Vista de sección ─────────────────────────────────────────────
-def _render_section_visual(section, user_id, profile, reads_by_section, client):
+def _render_section_visual(section, user_id, profile, reads_by_section, client, all_sections=None):
     num = str(section["section_number"])
     icon = SECTION_ICONS.get(num, "📄")
     color = SECTION_COLORS.get(num, "#CC1414")
@@ -228,7 +228,7 @@ def _render_section_visual(section, user_id, profile, reads_by_section, client):
 
     if not read.get("is_completed"):
         _ensure_read_started(user_id, section["id"], client)
-        _render_quiz_section(section, user_id, profile, reads_by_section, client)
+        _render_quiz_section(section, user_id, profile, reads_by_section, client, all_sections)
 
 
 def _render_content_visual(content: str, accent_color: str):
@@ -420,7 +420,7 @@ def _inline_md(text: str) -> str:
 
 
 # ── Quiz ─────────────────────────────────────────────────────────
-def _render_quiz_section(section, user_id, profile, reads_by_section, client):
+def _render_quiz_section(section, user_id, profile, reads_by_section, client, all_sections=None):
     questions = section.get("quiz_questions") or []
     if isinstance(questions, str):
         try:
@@ -470,9 +470,24 @@ def _render_quiz_section(section, user_id, profile, reads_by_section, client):
             section_id=section["id"]
         )
 
-        if st.button("➡️ Continuar al siguiente", type="primary"):
-            st.session_state.pop("selected_section", None)
+        # Navegar a la sección siguiente
+        next_section = None
+        if all_sections:
+            ids = [s["id"] for s in all_sections]
+            try:
+                idx = ids.index(section["id"])
+                if idx + 1 < len(all_sections):
+                    next_section = all_sections[idx + 1]
+            except ValueError:
+                pass
+
+        btn_label = f"➡️ Ir a sección {next_section['section_number']}: {next_section['title']}" if next_section else "✅ Volver al índice"
+        if st.button(btn_label, type="primary"):
             st.session_state.pop(f"quiz_submitted_{section['id']}", None)
+            if next_section:
+                st.session_state["selected_section"] = next_section["id"]
+            else:
+                st.session_state.pop("selected_section", None)
             st.rerun()
 
 
