@@ -80,6 +80,74 @@ def _render_chat(session: dict, profile: dict):
 
     st.markdown("---")
 
+    # Botón de micrófono — transcribe y pega en el chat input
+    components.html("""
+    <style>
+      body { margin:0; background:transparent; }
+      #mic {
+        display:flex; align-items:center; gap:8px;
+        background:white; border:1.5px solid #E5E7EB; border-radius:10px;
+        padding:8px 14px; cursor:pointer; font-size:0.85rem; font-weight:600;
+        color:#374151; transition:all 0.15s; width:fit-content;
+      }
+      #mic:hover { border-color:#CC1414; color:#CC1414; }
+      #mic.recording { border-color:#DC2626; color:#DC2626; background:#FEF2F2; }
+      #dot { width:8px; height:8px; border-radius:50%; background:#9CA3AF; }
+      #mic.recording #dot { background:#DC2626; animation:pulse 1s infinite; }
+      @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+      #status { font-size:0.75rem; color:#9CA3AF; margin-top:4px; min-height:16px; }
+    </style>
+    <button id="mic" onclick="toggleMic()">
+      <div id="dot"></div>
+      <span id="label">🎙️ Hablar</span>
+    </button>
+    <div id="status"></div>
+    <script>
+      let rec = null, going = false;
+      function toggleMic() {
+        going ? stopMic() : startMic();
+      }
+      function startMic() {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { document.getElementById('status').textContent = 'Usá Chrome para voz'; return; }
+        rec = new SR(); rec.lang = 'es-AR'; rec.continuous = false; rec.interimResults = true;
+        rec.onstart = () => {
+          going = true;
+          document.getElementById('mic').classList.add('recording');
+          document.getElementById('label').textContent = '⏹️ Detener';
+          document.getElementById('status').textContent = 'Escuchando...';
+        };
+        rec.onresult = (e) => {
+          let t = ''; for (let i=0;i<e.results.length;i++) t += e.results[i][0].transcript;
+          // Pegar en el chat_input de Streamlit en el frame padre
+          try {
+            const ta = window.parent.document.querySelector('textarea[data-testid="stChatInputTextArea"]');
+            if (ta) {
+              const nativeInput = Object.getOwnPropertyDescriptor(window.parent.HTMLTextAreaElement.prototype,'value').set;
+              nativeInput.call(ta, t);
+              ta.dispatchEvent(new Event('input', {bubbles:true}));
+            }
+          } catch(e2) {}
+          document.getElementById('status').textContent = t;
+        };
+        rec.onend = () => {
+          going = false;
+          document.getElementById('mic').classList.remove('recording');
+          document.getElementById('label').textContent = '🎙️ Hablar';
+          document.getElementById('status').textContent = 'Listo — presioná Enter para enviar';
+        };
+        rec.onerror = (e) => {
+          going = false;
+          document.getElementById('mic').classList.remove('recording');
+          document.getElementById('label').textContent = '🎙️ Hablar';
+          document.getElementById('status').textContent = 'Error: ' + e.error;
+        };
+        rec.start();
+      }
+      function stopMic() { if (rec) rec.stop(); }
+    </script>
+    """, height=70, scrolling=False)
+
     # Input de texto
     user_input = st.chat_input("Escribí tu respuesta al cliente...", key=f"chat_{session['turn']}")
 
