@@ -56,7 +56,11 @@ def style_score_dataframe(df: pd.DataFrame, score_cols: list[str]) -> pd.DataFra
     styler = df.style
     for col in score_cols:
         if col in df.columns:
-            styler = styler.applymap(color_cell, subset=[col])
+            # pandas >= 2.1 renombró applymap → map
+            if hasattr(styler, "map"):
+                styler = styler.map(color_cell, subset=[col])
+            else:
+                styler = styler.applymap(color_cell, subset=[col])
     return styler
 
 

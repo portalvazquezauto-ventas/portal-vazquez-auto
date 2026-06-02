@@ -15,9 +15,16 @@ def render():
         st.error("Sin acceso.")
         return
 
-    st.markdown("## 🏠 Panel de Administración")
-    if role == "director":
-        st.caption("Acceso total — Director")
+    col_title, col_btn = st.columns([5, 1])
+    with col_title:
+        st.markdown("## 🏠 Panel de Administración")
+        if role == "director":
+            st.caption("Acceso total — Director")
+    with col_btn:
+        st.markdown('<div style="padding-top:14px"></div>', unsafe_allow_html=True)
+        if st.button("🏠 Inicio", use_container_width=True, key="admin_back_home"):
+            st.session_state["page"] = "dashboard"
+            st.rerun()
     st.markdown("---")
 
     tabs = st.tabs(["🔔 Notificaciones", "📖 Manual", "🤖 Entrenamientos", "📊 Scoring", "👥 Usuarios", "🔄 Contenido"])
