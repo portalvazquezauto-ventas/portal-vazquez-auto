@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from auth import get_profile, get_role, create_user, toggle_user_active, is_director
+from auth import get_profile, get_role, create_user, toggle_user_active, is_director, reset_user_password
 from supabase_client import get_client, get_admin_client
 from components.scoring import style_score_dataframe
 from utils.notifications import get_notifications, mark_all_read
@@ -224,20 +224,53 @@ def _render_user_management(profile, role):
         else:
             users = admin.table("profiles").select("*").eq("role", "seller").execute().data or []
 
+        role_labels = {"director": "Director", "manager": "Encargado", "seller": "Vendedor"}
+        role_colors = {"director": "#7C3AED", "manager": "#1D4ED8", "seller": "#16A34A"}
+
         for u in users:
-            col1, col2, col3 = st.columns([3, 1, 1])
-            with col1:
-                role_badge = {"director": "🟣", "manager": "🔵", "seller": "🟢"}.get(u["role"], "⚪")
-                status = "✅" if u.get("is_active") else "❌"
-                st.markdown(f"{status} {role_badge} **{u['full_name']}** — {u['email']}")
-            with col2:
-                st.caption(u["role"])
-            with col3:
+            is_active = u.get("is_active", True)
+            rc = role_colors.get(u["role"], "#6B7280")
+            rl = role_labels.get(u["role"], u["role"])
+
+            with st.container():
+                st.markdown(
+                    '<div style="background:white;border:1px solid ' + ('#E5E7EB' if is_active else '#FEE2E2') + ';'
+                    'border-radius:10px;padding:12px 16px;margin-bottom:8px">'
+                    '<div style="display:flex;align-items:center;gap:10px">'
+                    '<div style="width:8px;height:8px;border-radius:50%;background:' + ('#16A34A' if is_active else '#DC2626') + ';flex-shrink:0"></div>'
+                    '<div style="flex:1">'
+                    '<span style="font-weight:700;color:#111">' + u['full_name'] + '</span> '
+                    '<span style="color:#6B7280;font-size:0.82rem">' + u['email'] + '</span>'
+                    '</div>'
+                    '<span style="background:' + rc + '20;color:' + rc + ';padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:700">' + rl + '</span>'
+                    '</div></div>',
+                    unsafe_allow_html=True
+                )
+
                 if u["id"] != profile["id"]:
-                    label = "Desactivar" if u.get("is_active") else "Activar"
-                    if st.button(label, key=f"toggle_{u['id']}"):
-                        toggle_user_active(u["id"], not u.get("is_active"))
-                        st.rerun()
+                    c1, c2, c3 = st.columns([1, 1, 2])
+                    with c1:
+                        label = "🔒 Bloquear" if is_active else "✅ Activar"
+                        if st.button(label, key=f"toggle_{u['id']}", use_container_width=True):
+                            toggle_user_active(u["id"], not is_active)
+                            st.rerun()
+                    with c2:
+                        if st.button("🔑 Nueva clave", key=f"pwdbtn_{u['id']}", use_container_width=True):
+                            st.session_state[f"show_pwd_{u['id']}"] = not st.session_state.get(f"show_pwd_{u['id']}", False)
+                            st.rerun()
+
+                    if st.session_state.get(f"show_pwd_{u['id']}"):
+                        with st.form(f"pwd_form_{u['id']}"):
+                            new_pwd = st.text_input("Nueva contraseña", type="password", placeholder="Mínimo 8 caracteres", key=f"pwd_{u['id']}")
+                            if st.form_submit_button("Guardar contraseña", type="primary"):
+                                if len(new_pwd) < 8:
+                                    st.error("La contraseña debe tener al menos 8 caracteres.")
+                                else:
+                                    if reset_user_password(u["id"], new_pwd):
+                                        st.success(f"✅ Contraseña de {u['full_name']} actualizada.")
+                                        st.session_state.pop(f"show_pwd_{u['id']}", None)
+                                        st.rerun()
+
     except Exception as e:
         st.error(f"Error: {e}")
 

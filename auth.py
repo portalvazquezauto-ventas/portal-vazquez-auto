@@ -104,3 +104,22 @@ def toggle_user_active(user_id: str, is_active: bool):
         get_admin_client().table("profiles").update({"is_active": is_active}).eq("id", user_id).execute()
     except Exception as e:
         st.error(f"Error: {e}")
+
+
+def reset_user_password(user_id: str, new_password: str) -> bool:
+    """Cambia la contraseña de un usuario. Solo admins."""
+    try:
+        get_admin_client().auth.admin.update_user_by_id(user_id, {"password": new_password})
+        return True
+    except Exception as e:
+        st.error(f"Error al cambiar contraseña: {e}")
+        return False
+
+
+def send_password_reset(email: str) -> bool:
+    """Envía email de restablecimiento de contraseña."""
+    try:
+        get_client().auth.reset_password_email(email)
+        return True
+    except Exception as e:
+        return False

@@ -294,40 +294,63 @@ st.markdown("""
 def _logo_html(size: str = "normal") -> str:
     if size == "small":
         return """
-        <div style="display:flex;align-items:center;gap:8px;padding:16px 0 12px">
-          <div style="background:#CC1414;color:white;font-weight:900;font-size:1.1rem;
-                      padding:4px 10px;border-radius:4px;letter-spacing:0.04em;line-height:1.2">
-            V<span style="font-size:0.7em;font-weight:400">ÁZQUEZ</span>
+        <div style="display:flex;align-items:center;gap:10px;padding:18px 0 14px">
+          <div style="position:relative;width:36px;height:36px;flex-shrink:0">
+            <div style="background:#CC1414;width:36px;height:36px;border-radius:8px;
+                        display:flex;align-items:center;justify-content:center">
+              <span style="color:white;font-weight:900;font-size:1.1rem;letter-spacing:-0.02em">V</span>
+            </div>
           </div>
-          <div style="color:#CCCCCC;font-size:0.7rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;line-height:1.1">
-            AUTO<br><span style="opacity:0.5;font-size:0.65rem">Portal Comercial</span>
+          <div>
+            <div style="color:#FFFFFF;font-weight:800;font-size:0.95rem;letter-spacing:0.04em;line-height:1.1">
+              VÁZQUEZ <span style="color:#CC1414">AUTO</span>
+            </div>
+            <div style="color:#6B7280;font-size:0.65rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px">
+              Portal Comercial
+            </div>
           </div>
         </div>"""
     return """
-    <div style="text-align:center;padding:48px 0 32px">
-      <div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div style="background:#CC1414;color:white;font-weight:900;font-size:2.2rem;
-                    padding:8px 18px;border-radius:6px;letter-spacing:0.03em;line-height:1.1">
-          V<span style="font-size:0.65em;font-weight:400">ÁZQUEZ</span>
+    <div style="text-align:center;padding:40px 0 28px">
+      <div style="display:inline-flex;flex-direction:column;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="background:#CC1414;width:52px;height:52px;border-radius:12px;
+                      display:flex;align-items:center;justify-content:center;
+                      box-shadow:0 4px 14px rgba(204,20,20,0.35)">
+            <span style="color:white;font-weight:900;font-size:1.8rem;letter-spacing:-0.02em">V</span>
+          </div>
+          <div style="text-align:left">
+            <div style="font-size:1.6rem;font-weight:900;color:#111;letter-spacing:-0.02em;line-height:1">
+              VÁZQUEZ
+            </div>
+            <div style="font-size:1rem;font-weight:700;color:#CC1414;letter-spacing:0.18em;line-height:1">
+              AUTO
+            </div>
+          </div>
         </div>
-        <div style="font-size:1rem;font-weight:800;letter-spacing:0.2em;color:#111;text-transform:uppercase;line-height:1.1">
-          AUTO
+        <div style="background:#F3F4F6;border-radius:20px;padding:4px 14px">
+          <span style="color:#6B7280;font-size:0.78rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">
+            Portal Comercial Interno
+          </span>
         </div>
       </div>
-      <div style="color:#6B7280;font-size:0.9rem;margin-top:4px">Portal interno del equipo comercial</div>
     </div>"""
 
 
 def render_login():
-    # Ocultar sidebar en login
     st.markdown("""
     <style>
     section[data-testid="stSidebar"] { display: none !important; }
     [data-testid="stSidebarCollapsedControl"] { display: none !important; }
-    .block-container { max-width: 480px !important; padding-top: 4rem !important; }
+    .block-container { max-width: 440px !important; padding-top: 3rem !important; }
     </style>""", unsafe_allow_html=True)
 
     st.markdown(_logo_html("normal"), unsafe_allow_html=True)
+
+    # Modo: login o recuperar contraseña
+    if st.session_state.get("show_reset"):
+        _render_forgot_password()
+        return
 
     with st.form("login_form"):
         email = st.text_input("Email", placeholder="tu@vazquezauto.com.ar")
@@ -347,10 +370,42 @@ def render_login():
                 else:
                     st.error("Credenciales incorrectas o usuario inactivo.")
 
+    if st.button("¿Olvidaste tu contraseña?", use_container_width=True):
+        st.session_state["show_reset"] = True
+        st.rerun()
+
     st.markdown("""
-    <div style="text-align:center;margin-top:24px;color:#9CA3AF;font-size:0.75rem">
+    <div style="text-align:center;margin-top:20px;color:#9CA3AF;font-size:0.75rem">
       © 2026 Vázquez Auto · Uso interno
     </div>""", unsafe_allow_html=True)
+
+
+def _render_forgot_password():
+    st.markdown("""
+    <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:12px;padding:16px 18px;margin-bottom:20px">
+      <div style="font-weight:700;color:#92400E;margin-bottom:4px">🔑 Restablecer contraseña</div>
+      <div style="color:#78350F;font-size:0.85rem">Te enviaremos un enlace a tu email para crear una nueva contraseña.</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    with st.form("reset_form"):
+        email = st.text_input("Tu email", placeholder="tu@vazquezauto.com.ar")
+        submit = st.form_submit_button("Enviar enlace →", use_container_width=True, type="primary")
+
+        if submit:
+            if not email:
+                st.error("Ingresá tu email.")
+            else:
+                from auth import send_password_reset
+                ok = send_password_reset(email)
+                if ok:
+                    st.success("✅ Revisá tu email — te enviamos el enlace para restablecer tu contraseña.")
+                else:
+                    st.error("No se pudo enviar el email. Contactá a tu encargado.")
+
+    if st.button("← Volver al login"):
+        st.session_state.pop("show_reset", None)
+        st.rerun()
 
 
 def render_sidebar(profile: dict, role: str):
@@ -415,13 +470,24 @@ def render_sidebar(profile: dict, role: str):
             st.rerun()
 
 
-def _page_header(title: str, subtitle: str = ""):
-    st.markdown(f"""
-    <div style="margin-bottom:24px">
-      <h2 style="margin:0;color:#111111;font-weight:800">{title}</h2>
-      {"<p style='margin:4px 0 0;color:#6B7280;font-size:0.9rem'>" + subtitle + "</p>" if subtitle else ""}
-      <div style="height:3px;width:48px;background:#CC1414;border-radius:2px;margin-top:10px"></div>
-    </div>""", unsafe_allow_html=True)
+def _page_header(title: str, subtitle: str = "", show_back: bool = True):
+    col_title, col_btn = st.columns([5, 1])
+    with col_title:
+        st.markdown(
+            '<div style="margin-bottom:4px">'
+            '<h2 style="margin:0;color:#111111;font-weight:800">' + title + '</h2>'
+            + ('<p style="margin:4px 0 0;color:#6B7280;font-size:0.9rem">' + subtitle + '</p>' if subtitle else '') +
+            '<div style="height:3px;width:48px;background:#CC1414;border-radius:2px;margin-top:10px"></div>'
+            '</div>',
+            unsafe_allow_html=True
+        )
+    if show_back:
+        with col_btn:
+            st.markdown('<div style="padding-top:6px"></div>', unsafe_allow_html=True)
+            if st.button("🏠 Inicio", key="_header_back_home", use_container_width=True):
+                st.session_state["page"] = "dashboard"
+                st.rerun()
+    st.markdown('<div style="margin-bottom:20px"></div>', unsafe_allow_html=True)
 
 
 def main():
