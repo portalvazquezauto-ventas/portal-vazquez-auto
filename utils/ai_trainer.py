@@ -111,7 +111,7 @@ def chat_with_client(profile_type: str, messages: list[dict], seller_message: st
     conversation.append({"role": "user", "content": seller_message})
 
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-haiku-4-5-20251001",
         max_tokens=300,
         system=profile["system_prompt"],
         messages=conversation
@@ -131,7 +131,7 @@ Evaluá la respuesta del vendedor según los criterios del manual."""
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-haiku-4-5-20251001",
             max_tokens=300,
             system=EVALUATOR_SYSTEM,
             messages=[{"role": "user", "content": prompt}]
@@ -155,7 +155,7 @@ Respondé directamente con la respuesta del vendedor, sin explicaciones."""
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-haiku-4-5-20251001",
             max_tokens=200,
             messages=[{"role": "user", "content": prompt}]
         )
@@ -193,7 +193,7 @@ Escribí un párrafo de 3-4 oraciones con:
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-haiku-4-5-20251001",
             max_tokens=300,
             messages=[{"role": "user", "content": prompt}]
         )
