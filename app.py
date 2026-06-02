@@ -207,6 +207,86 @@ st.markdown("""
     align-items: center;
     gap: 10px;
   }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+
+    /* Contenido principal — más padding lateral */
+    .block-container {
+      padding: 1rem 0.75rem 5rem !important;
+      max-width: 100% !important;
+    }
+
+    /* Sidebar colapsado por default en mobile — Streamlit ya lo maneja,
+       pero ajustamos el botón de toggle para que sea visible */
+    [data-testid="stSidebarCollapsedControl"] {
+      top: 8px !important;
+      left: 8px !important;
+    }
+
+    /* Headings más chicos */
+    h1 { font-size: 1.4rem !important; }
+    h2 { font-size: 1.2rem !important; }
+    h3 { font-size: 1rem !important; }
+
+    /* Métricas — una por fila */
+    [data-testid="stMetric"] {
+      padding: 12px 14px !important;
+    }
+
+    /* Columnas — stack en mobile */
+    [data-testid="stHorizontalBlock"] {
+      flex-wrap: wrap !important;
+    }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+      min-width: 100% !important;
+      flex: 1 1 100% !important;
+    }
+
+    /* Tabs — scroll horizontal */
+    .stTabs [data-baseweb="tab-list"] {
+      overflow-x: auto !important;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    .stTabs [data-baseweb="tab"] {
+      white-space: nowrap !important;
+      padding: 6px 12px !important;
+      font-size: 0.82rem !important;
+    }
+
+    /* Cards del manual — full width */
+    .vazquez-card { padding: 14px !important; }
+
+    /* Chat input — más grande en mobile */
+    [data-testid="stChatInput"] textarea {
+      font-size: 1rem !important;
+    }
+
+    /* Botones — más fáciles de tocar */
+    .stButton > button {
+      min-height: 44px !important;
+      font-size: 0.9rem !important;
+    }
+
+    /* Dataframe — scroll horizontal */
+    .stDataFrame { overflow-x: auto !important; }
+
+    /* Progress bar de manual */
+    [data-testid="stProgress"] { margin: 4px 0 !important; }
+
+    /* Ocultar scrollbar en mobile */
+    ::-webkit-scrollbar { width: 0px; height: 0px; }
+  }
+
+  /* ── TABLET (768px–1024px) ── */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .block-container {
+      padding: 1.5rem 1.5rem 2rem !important;
+    }
+    h1 { font-size: 1.6rem !important; }
+    h2 { font-size: 1.3rem !important; }
+  }
 </style>
 """, unsafe_allow_html=True)
 

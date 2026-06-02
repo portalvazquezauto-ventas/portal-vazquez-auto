@@ -140,7 +140,8 @@ def _render_progress_visual(sections, reads_by_section):
 def _render_section_grid(sections, reads_by_section):
     st.markdown('<div style="margin-bottom:16px"><span style="font-weight:700;color:#111;font-size:1.1rem">Secciones del manual</span></div>', unsafe_allow_html=True)
 
-    cols = st.columns(2)
+    # En mobile Streamlit colapsa las columnas automáticamente con el CSS de app.py
+    cols = st.columns([1, 1])
     for i, section in enumerate(sections):
         read = reads_by_section.get(section["id"], {})
         is_done = read.get("is_completed", False)
