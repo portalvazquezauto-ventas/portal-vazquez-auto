@@ -10,7 +10,9 @@ from utils.ai_trainer import (
 )
 from utils.notifications import notify_training_completed
 from components.scoring import render_score_cards, render_progress_bar
-import streamlit.components.v1 as components  # usado para declare_component
+import streamlit.components.v1 as components
+
+_voice_input = components.declare_component("voice_input", path="components/voice_input")
 
 
 def render():
@@ -79,12 +81,7 @@ def _render_chat(session: dict, profile: dict):
 
     st.markdown("---")
 
-    voice_input = components.declare_component(
-        "voice_input",
-        path="components/voice_input"
-    )
-
-    result = voice_input(mode=mode, key=f"voice_{session['turn']}")
+    result = _voice_input(mode=mode, key=f"voice_{session['turn']}")
 
     if result:
         action = result.get("action")
