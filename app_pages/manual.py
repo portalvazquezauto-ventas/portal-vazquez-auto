@@ -150,31 +150,25 @@ def _render_section_grid(sections, reads_by_section):
         check = '<span style="color:#16A34A;font-size:0.9rem">✓ Completado</span>' if is_done else '<span style="color:#9CA3AF;font-size:0.85rem">Pendiente</span>'
 
         with cols[i % 2]:
-            st.markdown(f"""
-            <div style="background:white;border:1px solid {'#D1FAE5' if is_done else '#E5E7EB'};border-radius:12px;
-                        padding:16px;margin-bottom:12px;cursor:pointer;
-                        box-shadow:0 1px 3px rgba(0,0,0,0.04)">
-              {status_bar}
-              <div style="display:flex;align-items:flex-start;gap:10px">
-                <div style="background:{color}15;color:{color};width:36px;height:36px;border-radius:8px;
-                            display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
-                  {icon}
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:0.72rem;color:#9CA3AF;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">
-                    Sección {num}
-                  </div>
-                  <div style="font-weight:700;color:#111;font-size:0.9rem;line-height:1.3;margin-top:2px">
-                    {section['title']}
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-                    {check}
-                    {score_badge}
-                  </div>
-                </div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
+            border_color = "#D1FAE5" if is_done else "#E5E7EB"
+            icon_bg = color + "22"
+            card_html = (
+                '<div style="background:white;border:1px solid ' + border_color + ';border-radius:12px;'
+                'padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">'
+                + status_bar +
+                '<div style="display:flex;align-items:flex-start;gap:10px">'
+                '<div style="background:' + icon_bg + ';color:' + color + ';width:36px;height:36px;border-radius:8px;'
+                'display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">'
+                + icon +
+                '</div>'
+                '<div style="flex:1;min-width:0">'
+                '<div style="font-size:0.72rem;color:#9CA3AF;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Sección ' + num + '</div>'
+                '<div style="font-weight:700;color:#111;font-size:0.9rem;line-height:1.3;margin-top:2px">' + section['title'] + '</div>'
+                '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">'
+                + check + score_badge +
+                '</div></div></div></div>'
+            )
+            st.markdown(card_html, unsafe_allow_html=True)
             if st.button(f"Abrir sección {num}", key=f"sec_{section['id']}", use_container_width=True, type="secondary"):
                 st.session_state["selected_section"] = section["id"]
                 st.rerun()
